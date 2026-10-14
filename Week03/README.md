@@ -12,7 +12,7 @@
 2. **Three balls. Which machine should own the one real ball? What must a client receive to draw it?** The server should own and move the only real ball; a client only needs to receive its position (and whether it is in play).
 3. **If the server believes "my paddle is at z = 3.2" from a client, what is the first cheat?** A client can send a position it never really reached — teleport the paddle in front of the ball or move faster than allowed.
 
-**Grades (after Step 10):** 1. ___ · 2. ___ · 3. ___  *(right / wrong / half)*
+**Grades (after Step 10):** 1. right · 2. right · 3. right
 
 ## Connection card (Step 11)
 
