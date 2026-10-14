@@ -77,10 +77,24 @@ public class ConnectionHud : MonoBehaviour
 
     private void Update()
     {
+        FitCameraRightOfPanel();
+
         if (Time.unscaledTime - _secondStart < 1f) return;
         _srvInPs = _srvIn; _srvOutPs = _srvOut; _cliInPs = _cliIn; _cliOutPs = _cliOut;
         _srvIn = _srvOut = _cliIn = _cliOut = 0;
         _secondStart = Time.unscaledTime;
+    }
+
+    // Keeps the whole court visible to the right of the HUD panel.
+    private static void FitCameraRightOfPanel()
+    {
+        Camera cam = Camera.main;
+        if (cam == null || !cam.orthographic || Screen.width <= 0) return;
+        float scale = Mathf.Max(1f, Screen.height / 720f);
+        float left = Mathf.Clamp01(320f * scale / Screen.width);
+        cam.rect = new Rect(left, 0f, 1f - left, 1f);
+        float needForWidth = (Court.HalfWidth + 0.7f) / Mathf.Max(0.1f, cam.aspect);
+        cam.orthographicSize = Mathf.Max(Court.HalfHeight + 1.5f, needForWidth);
     }
 
     // ---------- drawing ----------
