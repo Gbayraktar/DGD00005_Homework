@@ -29,6 +29,10 @@ public static class PongSetup
 
         if (paddle != null)
         {
+            // If the scene paddle is already an instance of some other prefab, cut that link,
+            // otherwise the saved Paddle prefab would be a variant that depends on it.
+            if (PrefabUtility.IsPartOfPrefabInstance(paddle))
+                PrefabUtility.UnpackPrefabInstance(paddle, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             Remove<PaddleMovement>(paddle);
             Remove<BoxCollider>(paddle);
             GetOrAdd<NetworkObject>(paddle);
@@ -48,6 +52,33 @@ public static class PongSetup
         so.ApplyModifiedPropertiesWithoutUndo();
 
         Finish("Step 4 done: Paddle prefab in Assets/Prefabs, PlayerSpawner set. Play -> Start Server -> Start Client.");
+    }
+
+    // Rebuilds the Paddle prefab from scratch (standalone, not a variant) and re-links the spawner.
+    [MenuItem("Pong/Repair - Rebuild Paddle prefab")]
+    public static void RebuildPaddle()
+    {
+        if (!OpenPongScene()) return;
+        Directory.CreateDirectory("Assets/Prefabs");
+
+        GameObject paddle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        paddle.name = "Paddle";
+        paddle.transform.position = new Vector3(0f, 0.5f, 0f);
+        paddle.transform.localScale = new Vector3(0.3f, 0.5f, Court.PaddleHalfLength * 2);
+        Object.DestroyImmediate(paddle.GetComponent<Collider>());
+        paddle.AddComponent<NetworkObject>();
+        paddle.AddComponent<PaddleController>();
+        ConfigureNetworkTransform(paddle.AddComponent<NetworkTransform>(), clientAuthoritative: true, teleport: false);
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(paddle, PaddlePath);
+        Object.DestroyImmediate(paddle);
+
+        NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
+        var spawner = GetOrAdd<PlayerSpawner>(nm.gameObject);
+        var so = new SerializedObject(spawner);
+        so.FindProperty("_playerPrefab").objectReferenceValue = prefab.GetComponent<NetworkObject>();
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        Finish("Paddle prefab rebuilt (NetworkObject + PaddleController + NetworkTransform) and set in PlayerSpawner.");
     }
 
     // ---------------- Step 6 ----------------
