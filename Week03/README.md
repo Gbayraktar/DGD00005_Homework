@@ -16,14 +16,16 @@
 
 ## Connection card (Step 11)
 
-| | Direction 1 (I am server) | Direction 2 (partner is server) |
+| | Direction 1 (Görkem = server) | Direction 2 (Onur = server) |
 |---|---|---|
-| Partner | | |
-| Network (hotspot name) | | |
-| Server IP | | |
-| My ClientId + side | | |
-| RTT (ms) | | |
-| Worked first try? | | |
+| Partner | Onur Karakoyun | Onur Karakoyun |
+| Network | Radmin VPN (different home internets) | Radmin VPN |
+| Server IP | 26.15.38.23 (Görkem) | 26.98.35.18 (Onur) |
+| My ClientId + side | Görkem: client 0, LEFT · Onur: client 1, RIGHT | Onur: client 0, LEFT · Görkem: client 1, RIGHT |
+| RTT (ms) | Onur: 53 ms | Görkem: 29 ms |
+| Worked first try? | No — the server's firewall blocked it; after allowing Pong it connected | Yes |
+
+*We were not in the same place, so we used Radmin VPN instead of a phone hotspot. On demo day we connect over a hotspot.*
 
 ## Design sheet (before Step 7)
 
