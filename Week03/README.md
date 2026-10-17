@@ -65,4 +65,54 @@ The first line of the ball's `Update` is `if (!IsServerInitialized) return;` —
 
 ## Answers to notes Section 14
 
-*(Write your answers here — the questions are in the Week 3 lecture notes, Section 14.)*
+**1. Why can two machines never share a "now"?**
+A message needs time to travel: light in fibre covers about 200 km per millisecond, and every router on the way adds queueing. Istanbul → Frankfurt is roughly 1,900 km, so at least ~10 ms one way and ~20 ms there and back; real connections give 35–50 ms RTT, which is two to three frames at 60 fps (16.7 ms each). Whatever a machine receives from another one is already in the past, so each machine only ever knows the others' past.
+
+**2. Topology grid**
+
+| | Dedicated server | Listen server (host) | Peer-to-peer |
+|---|---|---|---|
+| Trust | a separate server process that no player controls | the hosting player's game | nobody in charge; every peer must follow the rules |
+| Cost | someone pays for the server machine | free; the host's PC and upload carry it | free |
+| Latency | every player has a ping to the server | host has 0 ms, the others ping the host | players talk directly (if NAT lets them) |
+
+In Step 5 our Pong was a dedicated server: Multiplayer Play Mode Player 2, tagged `Server`, started only the server through `ServerBootstrap`. In Step 11 the server was the Pong build on one laptop (Görkem's, then Onur's) with Start Server and Start Client pressed, so that laptop was a host (listen server) and the other one a client, connected over Radmin VPN.
+
+**3. Why UDP?**
+TCP delivers everything in order, so one lost packet holds back all the packets after it until it is resent. For a game that is the wrong trade: a ball position from 100 ms ago is useless, the next one is already on its way. So games use UDP and add reliability only where it is needed. In our Pong, reliable: the score SyncVars, `AnnounceGoal`, `YouServe`, `RequestServe` and the event feed. Unreliable: the ball's and paddles' positions that NetworkTransform sends every tick.
+
+**4. NetworkObject, NetworkBehaviour, and why the Hud has neither**
+`NetworkObject` makes a GameObject exist on the network: it gets an ObjectId that is the same on every machine, an owner, and it can be spawned and despawned for everyone. Deriving from `NetworkBehaviour` lets a script on such an object ask network questions (`IsOwner`, `IsServerInitialized`), receive `OnStartServer` / `OnStartClient`, and hold SyncVars and RPCs. `ConnectionHud` needs none of this: it only draws this machine's own buttons and numbers, and nothing about it has to exist or match on another machine, so it is a plain `MonoBehaviour` on a plain GameObject.
+
+**5. One Paddle prefab owned by client 0**
+
+| | Server | Client 0 (owner) | Client 1 |
+|---|---|---|---|
+| `IsOwner` | false | true | false |
+| `IsServerInitialized` | true | false | false |
+| start callback | `OnStartServer` (picks the side) | `OnStartClient` (sets `Local`, logs "I am client 0") | `OnStartClient` |
+| reads the keyboard? | no | yes | no — stopped by `if (!IsOwner) return;` |
+
+**6. What sends the paddle's position, along which path, with which setting?**
+The `NetworkTransform` on the Paddle prefab. The path is owner client → server → all other clients, because Client Authoritative is on: this week the owner is trusted to say where its paddle is. On the Ball, Client Authoritative is off, because nobody owns the ball: the server moves it and every client, including the players, only receives the server's position.
+
+**7. Three balls in Step 5, one ball after Step 7**
+In Step 5 every window ran `Court.Awake` with Local Ball ticked, so each window built its own `LocalBall` — a plain, unsynchronised object — and played its own private match: three windows, three balls. After Step 7 Local Ball is off and `BallSpawner.OnStartServer` runs once, only on the server: it instantiates the Ball prefab and calls `Spawn`, which tells every client (also a late one) to create a copy of that one NetworkObject. A client is not allowed to call `Spawn`; FishNet refuses it, so the most a client could make is a local object that nobody else sees.
+
+**8. State or event?**
+
+| Item | State / event | FishNet piece |
+|---|---|---|
+| the score | state | SyncVar (`LeftScore`, `RightScore`) |
+| "LEFT scored" | event | ObserversRpc (`AnnounceGoal`) |
+| whose serve it is | state | SyncVar (`ServingSide`) |
+| "you serve" | event | TargetRpc (`YouServe`) |
+| ball-hits-paddle sound | event | ObserversRpc |
+| whether the ball is in play | state | SyncVar (`InPlay`) |
+| the ball's position | state | NetworkTransform (sent every tick) |
+
+**9. Who decides whether the ball hit the paddle?**
+The server, in `NetworkBall.Update`, using its own copies of the paddles, i.e. the positions their owners last sent, one or two ticks old. Its answer is final. A player who saw their paddle "clearly touch" the ball can see it pass through, because their screen showed their own paddle now and the ball a little in the past. If a client wrote `InPlay.Value` itself, only its own copy would change: the server would not know, no serve would happen, and the value would be overwritten at the server's next change. If clients were allowed to write it, anyone could serve whenever they wanted — a cheat.
+
+**10. Bandwidth**
+One client receives 8 × 30 × 40 = 9,600 B/s ≈ 9.6 kB/s; with 4 clients the server sends 4 × 9,600 = 38,400 B/s ≈ 38 kB/s. In our own Step 10 measurement (1 server + 1 client), going from tick 30 to tick 10 cut the server's output from 405 to 168 B/s, less than half. My own paddle did not change at tick 10 because my keyboard moves it locally every frame; the tick rate only changes how often the others hear about it, and how often the ball arrives from the server.
