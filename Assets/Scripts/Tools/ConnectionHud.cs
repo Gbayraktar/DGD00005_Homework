@@ -24,11 +24,6 @@ public class ConnectionHud : MonoBehaviour
         Debug.Log($"[HUD] {text}");
     }
 
-    /// <summary>Last full second's byte counts (read by the tick-rate measurement).</summary>
-    public static ulong ServerOutPerSecond { get; private set; }
-    public static ulong ClientInPerSecond { get; private set; }
-    public static int CompletedSeconds { get; private set; }
-
     [SerializeField] private string address = "localhost";
 
     private NetworkManager _nm;
@@ -86,9 +81,6 @@ public class ConnectionHud : MonoBehaviour
 
         if (Time.unscaledTime - _secondStart < 1f) return;
         _srvInPs = _srvIn; _srvOutPs = _srvOut; _cliInPs = _cliIn; _cliOutPs = _cliOut;
-        ServerOutPerSecond = _srvOutPs;
-        ClientInPerSecond = _cliInPs;
-        CompletedSeconds++;
         _srvIn = _srvOut = _cliIn = _cliOut = 0;
         _secondStart = Time.unscaledTime;
     }
