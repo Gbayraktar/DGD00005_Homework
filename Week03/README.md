@@ -51,11 +51,13 @@ The first line of the ball's `Update` is `if (!IsServerInitialized) return;` —
 
 | TICK RATE | SERVER OUT B/S (RALLY) | BALL IN A CLIENT WINDOW | OTHER PADDLE |
 |---|---|---|---|
-| 10 | | | |
-| 30 | | | |
-| 60 | | | |
+| 10 | 168 | | |
+| 30 | 405 | | |
+| 60 | 767 | | |
 
-- **What did 60 cost?** ___ *(about twice the server out B/s of 30 — fill in your numbers)*
+*Server out B/s: average of 10 one-second samples during a rally, 1 server + 1 client on one laptop, measured with `Pong → Measure tick rates`.*
+
+- **What did 60 cost?** Bandwidth: 767 B/s instead of 405 B/s at 30 (about 1.9×) and 168 B/s at 10 — the server sends roughly a fixed amount per tick, so bytes grow with the tick rate.
 - **What did it buy?** A smoother ball and paddle with less delay, because positions are sent more often.
 - **Why did the ball step even for the player moving a paddle?** The ball is moved only on the server and sent at the tick rate; my own paddle is moved locally every frame, but the ball still arrives only once per tick, so it steps.
 

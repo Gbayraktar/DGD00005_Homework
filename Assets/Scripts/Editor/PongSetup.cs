@@ -149,7 +149,7 @@ public static class PongSetup
     [MenuItem("Pong/Tick rate 60 (measure)")]
     public static void Tick60() => SetStatsAndTick(60);
 
-    private static void SetStatsAndTick(int tickRate)
+    public static void SetStatsAndTick(int tickRate)
     {
         if (!OpenPongScene()) return;
         NetworkManager nm = Object.FindFirstObjectByType<NetworkManager>();
