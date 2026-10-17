@@ -53,11 +53,13 @@ The first line of the ball's `Update` is `if (!IsServerInitialized) return;` —
 
 | TICK RATE | SERVER OUT B/S (RALLY) | BALL IN A CLIENT WINDOW | OTHER PADDLE |
 |---|---|---|---|
-| 10 | 168 | | |
-| 30 | 405 | | |
-| 60 | 767 | | |
+| 10 | 168 | smooth (host window) | not observed (one client) |
+| 30 | 405 | smooth (host window) | not observed (one client) |
+| 60 | 767 | smooth (host window) | not observed (one client) |
 
 *Server out B/s: average of 10 one-second samples during a rally, 1 server + 1 client on one laptop, measured with `Pong → Measure tick rates`.*
+
+*Ball column: I watched it in the host window (server + client in one process). There the client's ball is the server's own object, moved every frame, so it looked the same at 10 and 60. A separate client window would only get 10 snapshots per second at tick 10 and should show the ball stepping.*
 
 - **What did 60 cost?** Bandwidth: 767 B/s instead of 405 B/s at 30 (about 1.9×) and 168 B/s at 10 — the server sends roughly a fixed amount per tick, so bytes grow with the tick rate.
 - **What did it buy?** A smoother ball and paddle with less delay, because positions are sent more often.
