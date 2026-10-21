@@ -26,11 +26,11 @@ The server receives `axis = 50`. The line that makes the paddle move at normal s
 
 | KEY | SERVER CONSOLE | PADDLE |
 |---|---|---|
-| C once | 19 lines `[Server] Rejected input … too fast.`, counter +19 | moves at normal speed |
+| C once | 20 lines `[Server] Rejected input … too fast.`, counter +20 (the paddle's own input of that tick was accepted first, so all 20 spam inputs were rejected) | moves at normal speed |
 | X once | nothing | moves at normal speed, never faster |
 | T once | nothing | jumps, then snaps back within a tick |
 
-Screenshot of the server Console after one C:
+Screenshot of the server Console after one C (tick 30, Console cleared before pressing C):
 
 ![Server console after C](screenshots/step5_c_spam.png)
 
