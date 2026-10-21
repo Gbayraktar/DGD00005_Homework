@@ -36,6 +36,12 @@ public class PaddleController : NetworkBehaviour
     // ---- server-only memory ----
     private float _serverAxis;   // the last input the server accepted
 
+    // Rate limit: one paddle belongs to one client, so one timestamp per paddle = one per client.
+    private const double MinInputGap = 0.030;    // seconds
+    private double _lastInputTime = -1;
+    public int RejectedInputs;
+    private System.Func<string> _rejectedPanel;
+
     public static string SideName(int side) => side == Left ? "LEFT" : side == Right ? "RIGHT" : "SPECTATOR";
 
     private void Awake()
@@ -74,6 +80,9 @@ public class PaddleController : NetworkBehaviour
         Side.Value = side;
         Debug.Log($"[Server] client {Owner.ClientId} -> {SideName(side)}");
         GameState.Announce($"Client {Owner.ClientId} joined as {SideName(side)}");
+
+        _rejectedPanel = () => $"Rejected inputs (paddle {OwnerId}): {RejectedInputs}";
+        ConnectionHud.Panels.Add(_rejectedPanel);
     }
 
     public override void OnStopServer()
@@ -81,6 +90,7 @@ public class PaddleController : NetworkBehaviour
         base.OnStopServer();
         GameState.Announce($"Client {Owner.ClientId} ({SideName(Side.Value)}) left");
         All.Remove(this);
+        if (_rejectedPanel != null) ConnectionHud.Panels.Remove(_rejectedPanel);
     }
 
     public override void OnStartClient()
@@ -175,6 +185,16 @@ public class PaddleController : NetworkBehaviour
         if (float.IsNaN(axis)) return;
         axis = Mathf.Clamp(axis, -1f, 1f);            // a client that sends 50 gets 1
         if (Side.Value == Spectator) return;           // a spectator has no paddle to move
+
+        // Too fast? One keyboard sends one input per tick (33 ms at tick 30).
+        double now = TimeManager.TicksToTime(TimeManager.Tick);
+        if (_lastInputTime >= 0 && now - _lastInputTime < MinInputGap)
+        {
+            RejectedInputs++;
+            Debug.Log($"[Server] Rejected input from client {OwnerId}: too fast.");
+            return;
+        }
+        _lastInputTime = now;
 
         _serverAxis = axis;
     }
