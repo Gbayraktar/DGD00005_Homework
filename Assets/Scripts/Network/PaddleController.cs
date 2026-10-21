@@ -155,6 +155,39 @@ public class PaddleController : NetworkBehaviour
 
         if (ServePressed())
             RequestServe();
+
+        // ---- Step 5: debug cheats. They stay in the project; the server must survive them. ----
+        if (KeyDown(CheatKey.C))                       // spam: 20 inputs in one frame
+            for (int i = 0; i < 20; i++) ServerSetAxis(1f);
+
+        if (KeyDown(CheatKey.X))                       // speed hack
+            ServerSetAxis(50f);
+
+        if (KeyDown(CheatKey.T) && NetworkBall.Instance != null)   // teleport, client only, no RPC
+            transform.position = NetworkBall.Instance.transform.position;
+    }
+
+    private enum CheatKey { C, X, T }
+
+    private static bool KeyDown(CheatKey key)
+    {
+#if ENABLE_INPUT_SYSTEM
+        Keyboard k = Keyboard.current;
+        if (k == null) return false;
+        switch (key)
+        {
+            case CheatKey.C: return k.cKey.wasPressedThisFrame;
+            case CheatKey.X: return k.xKey.wasPressedThisFrame;
+            default: return k.tKey.wasPressedThisFrame;
+        }
+#else
+        switch (key)
+        {
+            case CheatKey.C: return Input.GetKeyDown(KeyCode.C);
+            case CheatKey.X: return Input.GetKeyDown(KeyCode.X);
+            default: return Input.GetKeyDown(KeyCode.T);
+        }
+#endif
     }
 
     // Runs once per network tick on every machine that has this paddle.
