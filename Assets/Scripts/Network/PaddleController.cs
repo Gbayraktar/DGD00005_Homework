@@ -8,9 +8,10 @@ using UnityEngine.InputSystem;
 #endif
 
 /// <summary>
-/// Step 4 + Step 8 - One paddle per connected player (spawned by PlayerSpawner).
-/// Server picks the side, owner moves it (NetworkTransform, client authoritative),
-/// and the three RPCs for serve / goal / your serve live here.
+/// One paddle per connected player (spawned by PlayerSpawner).
+/// Server picks the side. Homework 2: the owner only sends its input (axis) every tick,
+/// the SERVER moves the paddle and NetworkTransform (client authoritative off) sends the result.
+/// The three RPCs for serve / goal / your serve also live here.
 /// </summary>
 public class PaddleController : NetworkBehaviour
 {
@@ -32,6 +33,9 @@ public class PaddleController : NetworkBehaviour
 
     private Renderer _renderer;
 
+    // ---- server-only memory ----
+    private float _serverAxis;   // the last input the server accepted
+
     public static string SideName(int side) => side == Left ? "LEFT" : side == Right ? "RIGHT" : "SPECTATOR";
 
     private void Awake()
@@ -48,6 +52,18 @@ public class PaddleController : NetworkBehaviour
     }
 
     // ---------- lifecycle ----------
+
+    public override void OnStartNetwork()
+    {
+        base.OnStartNetwork();
+        TimeManager.OnTick += OnTick;
+    }
+
+    public override void OnStopNetwork()
+    {
+        base.OnStopNetwork();
+        if (TimeManager != null) TimeManager.OnTick -= OnTick;
+    }
 
     public override void OnStartServer()
     {
@@ -121,24 +137,41 @@ public class PaddleController : NetworkBehaviour
             Court.Paint(gameObject, side == Left ? Blue : Orange);
     }
 
-    // ---------- input (owner only) ----------
+    // ---------- input ----------
 
     private void Update()
     {
         if (!IsOwner) return;
 
-        float input = 0f;
-        if (UpPressed()) input += 1f;
-        if (DownPressed()) input -= 1f;
-
-        if (input != 0f)
-        {
-            transform.position += Vector3.forward * input * speed * Time.deltaTime;
-            Court.ClampPaddle(transform);
-        }
-
         if (ServePressed())
             RequestServe();
+    }
+
+    // Runs once per network tick on every machine that has this paddle.
+    private void OnTick()
+    {
+        // 1. Owner sends its input (every tick, also 0).
+        if (IsOwner && Side.Value != Spectator)
+        {
+            float axis = 0f;
+            if (UpPressed()) axis += 1f;
+            if (DownPressed()) axis -= 1f;
+            ServerSetAxis(axis);
+        }
+
+        // 2. Server moves the paddle with the last accepted input.
+        if (IsServerInitialized)
+        {
+            transform.position += Vector3.forward * _serverAxis * speed * (float)TimeManager.TickDelta;
+            Court.ClampPaddle(transform);
+        }
+    }
+
+    /// <summary>Client -> server: "my input is up / down / nothing".</summary>
+    [ServerRpc]
+    private void ServerSetAxis(float axis)
+    {
+        _serverAxis = axis;
     }
 
     // One keyboard per machine: W/S or arrows both work.
