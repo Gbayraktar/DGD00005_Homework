@@ -26,9 +26,11 @@ Changes this week:
 
 ## Step 5 — the host wins
 
-- Guest's RTT: **___ ms**
-- What I saw: **___**
-- Tick rate 10, one rally, the ball on the guest: **___**  (then back to 30)
+*(expected — not measured yet)*
+
+- Guest's RTT: about one or two ticks on one laptop (33–66 ms at tick 30); over Radmin VPN it adds the real network delay.
+- What I should see: on the guest, the ball sometimes goes into the paddle on screen, then snaps back and bounces, because the server bounced it on its copy of the guest's paddle, which is a tick old. On the host this never happens: the host's paddle on the server *is* the host's paddle. The host's serve starts the moment Space is pressed; the guest's starts about one RTT later.
+- Tick rate 10, the ball on the guest: it should step (move in visible jumps) and the pass-through-then-bounce gets worse, because the guest gets only 10 positions per second. Back to 30 afterwards.
 
 ## Step 7 — connection card
 
