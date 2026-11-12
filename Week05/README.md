@@ -9,7 +9,19 @@ Changes this week:
 
 ## Step 3 — both callbacks, one paddle
 
-- `All.Count` on the host with one paddle: **___** (expected 1)
+- `All.Count` on the host with one paddle: **1** (the guard works).
+- Console after one Start Host (tick 30):
+  ```
+  [Server] Starting
+  [Client] Starting
+  [Server] Started
+  [Server] client 0 connected. Clients: 1
+  [Client] Started
+  [Host] This process is the server AND a client. RTT is 0 ms.
+  [Server] Spawned paddle #3 for client 0: LEFT
+  [Client] I am client 0, playing LEFT. My paddle is #3
+  ```
+- Note: my HUD showed **RTT 33 ms** on the host, not 0. Our host client still goes through Tugboat on 127.0.0.1, and FishNet measures RTT in whole ticks, so the smallest value it can show at tick 30 is one tick (33 ms). No message leaves the machine.
 - Which callback ran first, and which half of the host ran it: **`OnStartServer` ran first, on the server half** (it picked LEFT and logged `[Server] Spawned paddle #N …`); then `OnStartClient` ran on the client half of the same object (`[Client] I am client 0, playing LEFT …`). Without the guard both would have added the same paddle to `All`.
 
 ## Step 5 — the host wins
