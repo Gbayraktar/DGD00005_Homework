@@ -53,5 +53,9 @@ public class ConnectionLogger : MonoBehaviour
     private void OnClientConnectionState(ClientConnectionStateArgs args)
     {
         Debug.Log($"[Client] {args.ConnectionState}");
+
+        // Week 5: checked here, in the client handler, so the server has already started.
+        if (args.ConnectionState == LocalConnectionState.Started && _networkManager.ServerManager.Started)
+            Debug.Log("[Host] This process is the server AND a client. RTT is 0 ms.");
     }
 }

@@ -112,6 +112,21 @@ public class ConnectionHud : MonoBehaviour
         bool server = _nm.IsServerStarted;
         bool client = _nm.IsClientStarted;
 
+        // Week 5: a host = server + client in one process, one click.
+        bool serverOn = _nm.ServerManager.Started;
+        bool clientOn = _nm.ClientManager.Started;
+        if (!serverOn && !clientOn && GUILayout.Button("Start Host"))
+        {
+            ushort port = _nm.TransportManager.Transport.GetPort();
+            _nm.ServerManager.StartConnection();
+            _nm.ClientManager.StartConnection("127.0.0.1", port);
+        }
+        if (serverOn && clientOn && GUILayout.Button("Stop Host"))
+        {
+            _nm.ClientManager.StopConnection();     // the client half first,
+            _nm.ServerManager.StopConnection(true); // then the server
+        }
+
         if (!server && GUILayout.Button("Start Server")) _nm.ServerManager.StartConnection();
         if (server && GUILayout.Button("Stop Server")) _nm.ServerManager.StopConnection(true);
 

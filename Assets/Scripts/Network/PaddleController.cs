@@ -42,6 +42,14 @@ public class PaddleController : NetworkBehaviour
     public int RejectedInputs;
     private System.Func<string> _rejectedPanel;
 
+    // Week 5: shows how many paddles this process has in All (a host with one paddle must say 1).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void AddCountPanel()
+    {
+        All.Clear();
+        ConnectionHud.Panels.Add(() => $"Paddles in All: {All.Count}");
+    }
+
     public static string SideName(int side) => side == Left ? "LEFT" : side == Right ? "RIGHT" : "SPECTATOR";
 
     private void Awake()
@@ -78,7 +86,7 @@ public class PaddleController : NetworkBehaviour
 
         int side = FirstFreeSide();
         Side.Value = side;
-        Debug.Log($"[Server] client {Owner.ClientId} -> {SideName(side)}");
+        Debug.Log($"[Server] Spawned paddle #{ObjectId} for client {OwnerId}: {SideName(side)}");
         GameState.Announce($"Client {Owner.ClientId} joined as {SideName(side)}");
 
         _rejectedPanel = () => $"Rejected inputs (paddle {OwnerId}): {RejectedInputs}";
@@ -101,7 +109,7 @@ public class PaddleController : NetworkBehaviour
         if (IsOwner)
         {
             Local = this;
-            Debug.Log($"[Client] I am client {Owner.ClientId}, side {SideName(Side.Value)}");
+            Debug.Log($"[Client] I am client {OwnerId}, playing {SideName(Side.Value)}. My paddle is #{ObjectId}");
         }
         Place();
     }
