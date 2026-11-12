@@ -32,13 +32,14 @@ Changes this week:
 
 ## Step 7 — connection card
 
-| | Me as host | Me as guest |
+| | Me as host (Görkem) | Me as guest |
 |---|---|---|
-| Partner | ___ | ___ |
-| Host's address | ___ | ___ |
-| My ClientId | 0 | ___ |
-| My RTT | 0 (host) | ___ ms |
-| Connected first try / fix line | ___ | ___ |
+| Partner | Onur Karakoyun | Onur Karakoyun |
+| Network | Radmin VPN | Radmin VPN |
+| Host's address | 26.15.38.23 (me) | 26.98.35.18 (Onur) |
+| My ClientId | 0 (host) · Onur: 1, RIGHT | 1, RIGHT · Onur: 0, LEFT |
+| My RTT | host — tells nothing (one tick on my HUD) · Onur's: 53 ms | 29 ms |
+| Connected first try / fix line | No — "Same, only from other machines": the host's firewall; allowed Pong on Private + Public, then it connected | Yes |
 
 ## Step 8 — the same scripts, three ways
 
