@@ -40,6 +40,10 @@ public class PaddleController : NetworkBehaviour
     private const double MinInputGap = 0.030;    // seconds
     private double _lastInputTime = -1;
     public int RejectedInputs;
+
+    // Homework 3: one serve request per second, per player (instance field, not static).
+    private const double MinServeGap = 1.0;      // seconds
+    private double _lastServeTime = -1;
     private System.Func<string> _rejectedPanel;
 
     // Week 5: shows how many paddles this process has in All (a host with one paddle must say 1).
@@ -285,11 +289,28 @@ public class PaddleController : NetworkBehaviour
         GameState gs = GameState.Instance;
         NetworkBall ball = NetworkBall.Instance;
         if (gs == null || ball == null) return;
+
+        // Too fast? (well-formed -> too fast -> allowed by the rule -> write state -> announce)
+        double now = TimeManager.TicksToTime(TimeManager.Tick);
+        if (_lastServeTime >= 0 && now - _lastServeTime < MinServeGap)
+        {
+            TargetRefused(Owner, "TOO FAST");
+            return;
+        }
+        _lastServeTime = now;
+
         if (Side.Value != gs.ServingSide.Value) return;
         if (ball.InPlay.Value) return;
 
         ball.Serve(1 - Side.Value);
         GameState.Announce($"{SideName(Side.Value)} serves");
+    }
+
+    /// <summary>Server -> only the player who asked: why the request was refused.</summary>
+    [TargetRpc]
+    private void TargetRefused(NetworkConnection target, string why)
+    {
+        ConnectionHud.Flash(why);
     }
 
     /// <summary>Server -> all clients. Called on the scorer's paddle.</summary>
