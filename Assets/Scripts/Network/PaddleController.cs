@@ -173,9 +173,12 @@ public class PaddleController : NetworkBehaviour
 
         if (KeyDown(CheatKey.T) && NetworkBall.Instance != null)   // teleport, client only, no RPC
             transform.position = NetworkBall.Instance.transform.position;
+
+        if (KeyDown(CheatKey.G) && GameState.Instance != null)     // Homework 3: score edit, no RPC, a direct write
+            GameState.Instance.LeftScore.Value = 9;
     }
 
-    private enum CheatKey { C, X, T }
+    private enum CheatKey { C, X, T, G }
 
     private static bool KeyDown(CheatKey key)
     {
@@ -186,6 +189,7 @@ public class PaddleController : NetworkBehaviour
         {
             case CheatKey.C: return k.cKey.wasPressedThisFrame;
             case CheatKey.X: return k.xKey.wasPressedThisFrame;
+            case CheatKey.G: return k.gKey.wasPressedThisFrame;
             default: return k.tKey.wasPressedThisFrame;
         }
 #else
@@ -193,6 +197,7 @@ public class PaddleController : NetworkBehaviour
         {
             case CheatKey.C: return Input.GetKeyDown(KeyCode.C);
             case CheatKey.X: return Input.GetKeyDown(KeyCode.X);
+            case CheatKey.G: return Input.GetKeyDown(KeyCode.G);
             default: return Input.GetKeyDown(KeyCode.T);
         }
 #endif
